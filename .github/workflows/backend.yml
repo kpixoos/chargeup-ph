@@ -1,18 +1,33 @@
-# .github/workflows/backend.yml
+# backend/.github/workflows/backend.yml
 name: Backend CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: chargeup
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U user"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -21,17 +36,13 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
-        working-directory: backend
+        run: npm install
 
-      - name: Run Prisma generate
-        run: npx prisma generate
-        working-directory: backend
+      - name: Run Prisma migrations
+        run: npx prisma migrate dev --name init
 
-      - name: Run build
+      - name: Build backend
         run: npm run build
-        working-directory: backend
 
       - name: Run tests
         run: npm test
-        working-directory: backend
