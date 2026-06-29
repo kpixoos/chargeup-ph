@@ -1,17 +1,15 @@
-# .github/workflows/android-apk.yml
-name: Build Android APK
+name: Build Expo APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -20,18 +18,21 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
         working-directory: mobile
 
       - name: Install Expo CLI
         run: npm install -g expo-cli eas-cli
 
+      - name: Login to Expo
+        run: eas login --username ${{ secrets.EXPO_USERNAME }} --password ${{ secrets.EXPO_PASSWORD }}
+
       - name: Build APK
-        run: eas build --platform android --profile development --non-interactive
+        run: eas build --platform android --non-interactive --profile preview
         working-directory: mobile
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ChargeUpPH-APK
-          path: mobile/dist/*.
+          name: ChargeUP-v1
+          path: mobile/dist/*.apk
